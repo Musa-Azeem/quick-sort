@@ -40,11 +40,11 @@ int main(int argc, char **argv) {
     // Read file into array A
     if (!read_file(argv[1], A)) {
         // If read failed, write empty array to output file and exit
-        // write_file(argv[2], A);
+        write_file(argv[2], A);
         return 1;
     }
 
-
+    write_file(argv[2], A);
 
     return 0;
 }
@@ -54,38 +54,35 @@ int read_file(const char *filename, std::vector<double> &A){
      * This function reads a file from a given filename and populates the
      *  given array with the values
      * Input file
+     *  - File containing floating point numbers seperated by whitespace
      * 
      * Parameters:
      *      filename (char *)   :   name of file to read values from
      *      A (vector<double>)  :   Output vector with values read from file
      */
 
-    std::ifstream in_file;      // Input file stream
-    std::string line;           // line of input file
-    double value;               // each value read from file
+    std::ifstream in_file(filename);    // Input file stream
+    std::string line;                   // line of input file
+    double value;                       // each value read from file
 
-    try {
-        in_file.open(filename);
-        std::cout << "open" << std::endl;
-
+    if (in_file) {
         // Get each line of input file 
-        while(std::getline(in_file, line)){ 
+        while(std::getline(in_file, line)) { 
             std::istringstream iss(line);   // Delim file line by whitespace
-            while (iss >> value){
+            while (iss >> value) {
                 std::cout << "value: " << value << std::endl;
                 A.push_back(value);         // add each value to vector
             }
         }
-        in_file.close();
     }
-    catch (const std::exception& e) {
-        std::cout << "Error Reading File - " << e.what() << std::endl;
+    else {
+        std::cerr << "Error Opening Input File" << std::endl;
         return 0;   // return 0 to indicate failure
     }
 
     // Check if file was empty or did not exist
     if (A.size() == 0) {
-        std::cout << "Input file is empty or does not exist - sorting not complete" << std::endl;
+        std::cerr << "Input file is empty or does not exist - sorting not complete" << std::endl;
         return 0;   // return 0 to indicate failure
     }
     
@@ -93,7 +90,29 @@ int read_file(const char *filename, std::vector<double> &A){
 }
 
 int write_file(const char *filename, const std::vector<double> A) {
-    // TODO write array to file
+    /**
+     * This function writes a vector to a file of a given name
+     * Output file
+     *  - Outputs values of array seperated by whitespace
+     * 
+     * Parameters:
+     *      filename (char *)   :   Name of file to write values to
+     *      A (vector<double>)  :   Vector with values to write to file
+     */
+
+    std::ofstream out_file(filename);
+
+    if (out_file) {
+        for (auto val : A) {
+            out_file << val << " ";
+        }
+    }    
+    else {
+        std::cerr << "Error Opening Output File" << std::endl;
+        return 0;   // return 0 to indicate failure
+    }
+
+    return 1;
 }
 
 
