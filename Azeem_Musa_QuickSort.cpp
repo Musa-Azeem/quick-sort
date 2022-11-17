@@ -28,6 +28,7 @@ int quick_sort(std::vector<double> & A);
 int quick_sort(std::vector<double> & A, const int l, const int r);
 int hoarse_partition(std::vector<double> &A, const int l, const int r);
 int generate_random_int(int lower, int upper);
+void swap(std::vector<double> &A, const int i, const int j);
 int write_file(const char *filename, const std::vector<double> A);
 void print_array(const std::vector<double> A);
 
@@ -159,7 +160,7 @@ int quick_sort(std::vector<double> & A) {
      *      j <- r + 1
      *      repeat
      *          repeat i <- i + 1 until A[i] >= p 
-     *          repeat j <- j − 1 until A[j ] <= p 
+     *          repeat j <- j − 1 until A[j] <= p 
      *          swap(A[i], A[j])
      *      until i >= j
      *      swap(A[i], A[j]) //undo last swap when i >= j 
@@ -201,8 +202,17 @@ int hoarse_partition(std::vector<double> &A, const int l, const int r) {
      *  (int)   :   Index that split occurs
      */
 
-    int s = 0;
-    int p = generate_random_int(l, r+1);
+    int p = generate_random_int(l, r+1); // Generate random pivot within subarray
+    int i = l;      // Start i at left-index
+    int j = r+1;    // Start j at right-index
+
+    // Repeat iteration until i and j overlap
+    while (i < j) {
+        while(A[i] < p) i++;    // Increment i until a value greater than p is reached
+        while(A[j] > j) j--;    // Decrement j until a value less than p is reached
+        swap(A, i, j);
+    }
+
     return s;
 }
 
@@ -232,6 +242,40 @@ int generate_random_int(int lower, int upper) {
     int range = upper - lower;
     return std::floor(std::rand() % range + lower);
 }
+
+void swap(std::vector<double> &A, const int i, const int j) {
+    /**
+     * This function swaps the values at the given indices
+     * 
+     * Parameters:
+     *      A (vector<double>)  :   array to modify
+     *      i (int) :   first index to swap
+     *      j (int) :   second index to swap
+     */
+
+    if (i >= A.size()) {
+        // If first index is out of range, do nothing
+        std::cerr << "swap : index i is out of range - swap incomplete" 
+            << std::endl;
+        return;
+    }
+    if (j >= A.size()) {
+        // If second index is out of range, do nothing
+        std::cerr << "swap : index j is out of range - swap incomplete" 
+            << std::endl;
+        return;
+    }
+    if (i == j) {
+        // If indices are equal, do nothing
+        return;
+    }
+
+    // Swap values at given indices
+    double tmp = A[i];
+    A[i] = A[j];
+    A[j] = tmp;
+}
+
 
 void print_array(const std::vector<double> A){
     for (auto num : A){
