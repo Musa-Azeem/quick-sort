@@ -184,7 +184,6 @@ int quick_sort(std::vector<double> &A, const int l, const int r) {
      * Returns:
      *  (int)   : returns 1 to indicate success
      */
-
     hoarse_partition(A, l, r);
 
     return 1;
@@ -202,18 +201,24 @@ int hoarse_partition(std::vector<double> &A, const int l, const int r) {
      *  (int)   :   Index that split occurs
      */
 
-    int p = generate_random_int(l, r+1); // Generate random pivot within subarray
-    int i = l;      // Start i at left-index
-    int j = r+1;    // Start j at right-index
+    // Generate random pivot and move the value to beginning of subarray
+    swap(A, l, generate_random_int(l, r+1));
+    int p = A[l]; 
+    
+    int i = l+1;    // Start i at left index after pivot
+    int j = r;      // Start j at right index
+
+    std::clog << "Pivot for subarray A[" << l << ".." << r << "] is: " << p << std::endl;
 
     // Repeat iteration until i and j overlap
     while (i < j) {
         while(A[i] < p) i++;    // Increment i until a value greater than p is reached
-        while(A[j] > j) j--;    // Decrement j until a value less than p is reached
+        while(A[j] > p) j--;    // Decrement j until a value less than p is reached
         swap(A, i, j);
     }
-
-    return s;
+    swap(A, i, j);          // Undo last swap when i >= j
+    swap(A, l, j);          // Swap pivot with j, the new partition
+    return j;           // Return the partition index
 }
 
 int generate_random_int(int lower, int upper) {
