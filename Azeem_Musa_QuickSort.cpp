@@ -55,6 +55,7 @@ int main(int argc, char **argv) {
     // Sort the array
     quick_sort(A);
 
+    print_array(A);
     write_file(argv[2], A);
 
     return 0;
@@ -168,6 +169,11 @@ int quick_sort(std::vector<double> & A) {
      *      return j
      */
 
+    if (A.size() == 0 || A.size() == 1) {
+        // If array is empty or has only one element, do nothing
+        return 1;
+    }
+
     // QuickSort starting with first and last indices
     return quick_sort(A, 0, A.size()-1);     
 }
@@ -184,8 +190,15 @@ int quick_sort(std::vector<double> &A, const int l, const int r) {
      * Returns:
      *  (int)   : returns 1 to indicate success
      */
-    hoarse_partition(A, l, r);
 
+    int s = 0;      // Partition index
+    // Continue until indices overlap
+    if (l < r) {
+        // Parition array and get index to split
+        s = hoarse_partition(A, l, r);
+        quick_sort(A, l, s-1);      // Sort left partition
+        quick_sort(A, s+1, r);      // Sort right partition
+    }
     return 1;
 }
 
@@ -205,19 +218,20 @@ int hoarse_partition(std::vector<double> &A, const int l, const int r) {
     swap(A, l, generate_random_int(l, r+1));
     int p = A[l]; 
     
-    int i = l+1;    // Start i at left index after pivot
-    int j = r;      // Start j at right index
+    int i = l;    // Start i at left index after pivot
+    int j = r+1;      // Start j at right index
 
-    std::clog << "Pivot for subarray A[" << l << ".." << r << "] is: " << p << std::endl;
+    // std::clog << "Pivot for subarray A[" << l << ".." << r << "] is: " << p << std::endl;
 
     // Repeat iteration until i and j overlap
     while (i < j) {
-        while(A[i] < p) i++;    // Increment i until a value greater than p is reached
-        while(A[j] > p) j--;    // Decrement j until a value less than p is reached
+        do i++; while(A[i] < p && i < r);    // Increment i until a value greater than p is reached
+        do j--; while(A[j] > p && j > l);      // Decrement j until a value less than p is reached
         swap(A, i, j);
     }
     swap(A, i, j);          // Undo last swap when i >= j
     swap(A, l, j);          // Swap pivot with j, the new partition
+
     return j;           // Return the partition index
 }
 
@@ -260,14 +274,14 @@ void swap(std::vector<double> &A, const int i, const int j) {
 
     if (i >= A.size()) {
         // If first index is out of range, do nothing
-        std::cerr << "swap : index i is out of range - swap incomplete" 
-            << std::endl;
+        std::cerr << "swap(" << i << ", " << j << ") : index i is out of range "
+            << "- swap incomplete" << std::endl;
         return;
     }
     if (j >= A.size()) {
         // If second index is out of range, do nothing
-        std::cerr << "swap : index j is out of range - swap incomplete" 
-            << std::endl;
+        std::cerr << "swap(" << i << ", " << j << ") : index j is out of range "
+            << "- swap incomplete" << std::endl;
         return;
     }
     if (i == j) {
