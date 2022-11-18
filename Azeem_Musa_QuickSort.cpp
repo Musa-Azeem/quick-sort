@@ -18,10 +18,12 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <string>
 #include <sstream>
 #include <exception>
 #include <cstdlib>
 #include <cmath>
+#include <chrono>
 
 // Function Headers
 int read_file(const char *filename, std::vector<double> &A);
@@ -31,7 +33,9 @@ int hoarse_partition(std::vector<double> &A, const int l, const int r);
 int generate_random_int(int lower, int upper);
 void swap(std::vector<double> &A, const int i, const int j);
 int write_file(const char *filename, const std::vector<double> A);
+int write_time_to_file(const char *filename, double delta_millis);
 void print_array(const std::vector<double> A);
+
 
 // Entry Point - Driver Code to run QuickSort on input array
 int main(int argc, char **argv) {
@@ -41,9 +45,10 @@ int main(int argc, char **argv) {
         std::cout << "Usage: ./quicksort [input file] [output file]" << std::endl;
         return 1;
     }
-
+    std::string out_fn = argv[2];
+    std::string exe_out_fn 
+        = out_fn.replace(out_fn.find(".txt"), 4, "").append("-exe_time_millis.txt");
     std::srand(time(0));        // Used for random pivot generation
-    
     std::vector<double> A;      // Vector to represent input values
     
     // Read file into array A
@@ -53,11 +58,15 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // Sort the array
-    quick_sort(A);
+    // Sort the array and find the execution time
+    auto start = std::chrono::high_resolution_clock::now();     // Start timer
+    quick_sort(A);                                              // Sort array
+    auto end = std::chrono::high_resolution_clock::now();       // End timer
 
-    print_array(A);
-    write_file(argv[2], A);
+    double delta_millis = (end - start).count()/1000;
+
+    write_time_to_file(&(exe_out_fn)[0], delta_millis);
+    write_file(&out_fn[0], A);
 
     return 0;
 }
@@ -266,6 +275,31 @@ int write_file(const char *filename, const std::vector<double> A) {
 
     return 1;
 }
+
+int write_time_to_file(const char *filename, double delta_millis) {
+    /**
+     * This function writes a given time period to a file of a given name
+     * Output file
+     *  - Writes floating point time delta
+     * 
+     * Parameters:
+     *      filename (char *)   :   Name of file to write to
+     *      delta_millis (duration<double>)   :   time delta
+     */
+
+    std::ofstream out_file(filename);
+
+    if (out_file) {
+        out_file << delta_millis;
+    }    
+    else {
+        std::cerr << "Error Opening Output File" << std::endl;
+        return 0;   // return 0 to indicate failure
+    }
+
+    return 1;
+}
+
 
 void print_array(const std::vector<double> A){
     for (auto num : A){
