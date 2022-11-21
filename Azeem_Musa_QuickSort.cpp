@@ -7,12 +7,20 @@
  *  - It sorts an array of floating points given in an input file 
  *  - It outputs the sorted array in a given output file
  *  - It also outputs a file with the execution time of the algorithm
+ * 
+ * Usage: ./Azeem_Musa_QuickSort [input_file] [output_file]
  *  
  * 
  * Input Format:
  *  - Input file should be an ASCII file that contains a list of unsorted
  *    floating-point numbers separated by a blank space
  * 
+ * Output Format:
+ *  - First output file is an ASCII file containing a list of sorted 
+ *    floating-point numbers seperated by a blank space
+ *  - Second output file (named <filename>-exe_time_millis.txt) is an
+ *    ASCII file containing the execution time in milliseconds taken to run
+ *    the quick sort algorithm
  */
 
 #include <iostream>
