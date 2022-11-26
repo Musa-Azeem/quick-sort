@@ -337,7 +337,7 @@ int QuickSort::write_time_to_file(const std::string filename) const{
      */
 
     // Calculate execution time of most recent quick_sort
-    double delta_millis = (end_time - start_time).count()/1000;
+    double delta_millis = (end_time - start_time).count()/1000.0;
 
     std::ofstream out_file(filename);
 

@@ -59,7 +59,6 @@ def setup(final_output_dir):
 
     # Remove directories if they exist
     subprocess.run(['rm', '-rf', FILES_DIR])
-    subprocess.run(['rm', '-rf', final_output_dir])
 
     # Make directories
     subprocess.run(['mkdir', '-p', INPUT_FILES_DIR])
@@ -69,8 +68,8 @@ def setup(final_output_dir):
     subprocess.run(['mkdir', '-p', final_output_dir])
     
     # Compile C++ code
-    subprocess.run(['make', INPUT_FILE_GEN_EXE], stdout=subprocess.DEVNULL)
-    subprocess.run(['make', QUICK_SORT_EXE], stdout=subprocess.DEVNULL)
+    subprocess.run(['make', INPUT_FILE_GEN_EXE], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    subprocess.run(['make', QUICK_SORT_EXE], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
 
 def create_input_files():
@@ -149,7 +148,7 @@ def process_exe_times():
     return df
 
 
-def save_and_plot(df: pd.DataFrame, final_output_dir):
+def save_and_plot(df, final_output_dir):
     """
         Saves execution times for each file and the average executions times
             for each input size
@@ -186,7 +185,13 @@ def save_and_plot(df: pd.DataFrame, final_output_dir):
     plot.set_ylabel('Average Execution Time (ms)')
     plot.set_title('Average Execution Time for Quick Sort')
     plot.get_figure().savefig(os.path.join(final_output_dir, OUTPUT_PLOT_FN))
-    
+
+def clean():
+    """
+        Deletes input and output files of C++ code and cleans executables
+    """
+    subprocess.run(['rm', '-rf', FILES_DIR])
+    subprocess.run(['make', 'clean'], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
 # Entry point
 if __name__ == '__main__':
@@ -207,3 +212,5 @@ if __name__ == '__main__':
     # Process and plot execution times
     df = process_exe_times()
     save_and_plot(df, final_output_dir)
+
+    clean()
