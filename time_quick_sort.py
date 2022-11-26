@@ -1,5 +1,34 @@
 #!/usr/bin/env python3
 
+"""
+    Author :     Musa Azeem
+    Date   :     12/2/2022
+    File   :     time_quick_sort.py
+
+    This python script runs C++ code to:
+     - generate input files of different sizes
+     - run the quick sort algorithm of each size
+     - record the execution time for each input file
+     - save and plot the average execution time for each input size in the
+       given directory
+
+    Usage: ./time_quick_sort.py [output directory]
+
+
+    Output Files:
+     - Saves each execution time in an ASCII tab seperated file 
+       "execution_time.txt" in the format:
+       [input size] \t [Execution Time]
+    - Saves the average execution time for each input size in an ASCII
+      tab seperated file
+      "average_execution_time.txt in the format:
+      [input size] \t [Average Execution Time]
+    - Generates and saves a plot of the average execution times in a
+      file "plot_average_execution_time.jpg" in the jpg format,
+      with x being the input size and y being the average execution time
+      in milliseconds
+"""
+
 import pandas as pd
 import seaborn as sns
 import sys
@@ -13,23 +42,29 @@ INPUT_FILES_DIR = f'{FILES_DIR}/input-files'
 OUTPUT_FILES_DIR_10 = f'{FILES_DIR}/output-files/10'
 OUTPUT_FILES_DIR_100 = f'{FILES_DIR}/output-files/100'
 OUTPUT_FILES_DIR_1000 = f'{FILES_DIR}/output-files/1000'
+OUTPUT_EXE_TIMES_FN = "Azeem_Musa_executionTime.txt"
+OUTPUT_AVG_EXE_TIMES_FN = "Azeem_Musa_averageExecutionTime.txt"
 
 
 
-def setup():
+def setup(final_output_dir):
     """ 
         Sets up working directory
          - Creates new working directory to store input and output files
            of C++ code
          - Compiles C++ code
     """
+
+    # Remove directories if they exist
+    subprocess.run(['rm', '-rf', FILES_DIR])
+    subprocess.run(['rm', '-rf', final_output_dir])
+
     # Make directories
-    if os.path.isdir(FILES_DIR):
-        subprocess.run(['rm', '-rf', FILES_DIR])
     subprocess.run(['mkdir', '-p', INPUT_FILES_DIR])
     subprocess.run(['mkdir', '-p', OUTPUT_FILES_DIR_10])
     subprocess.run(['mkdir', '-p', OUTPUT_FILES_DIR_100])
     subprocess.run(['mkdir', '-p', OUTPUT_FILES_DIR_1000])
+    subprocess.run(['mkdir', '-p', final_output_dir])
     
     # Compile C++ code
     subprocess.run(['make', INPUT_FILE_GEN_EXE], stdout=subprocess.DEVNULL)
@@ -53,37 +88,115 @@ def run_quick_sort():
 
     # Run C++ : Run quick sort and record execution time
     # Run quick sort on each file
+    ofn = ""
     for i,file in enumerate(os.listdir(INPUT_FILES_DIR)):
+        ofn = file.split(".")[0]
         if file.startswith('10-'):
             # Files with this name contain 10 values
             subprocess.run([
                 f'./{QUICK_SORT_EXE}',
                 os.path.join(INPUT_FILES_DIR, file), 
-                os.path.join(OUTPUT_FILES_DIR_10,f'{file[3]}.txt')])
+                os.path.join(OUTPUT_FILES_DIR_10,f'{ofn}.txt')])
         elif file.startswith('100-'):
             # Files with this name contain 100 values
             subprocess.run([
                 f'./{QUICK_SORT_EXE}',
                 os.path.join(INPUT_FILES_DIR, file), 
-                os.path.join(OUTPUT_FILES_DIR_100,f'{file[4]}.txt')])
+                os.path.join(OUTPUT_FILES_DIR_100,f'{ofn}.txt')])
         elif file.startswith('1000-'):
             # Files with this name contain 1000 values
             subprocess.run([
                 f'./{QUICK_SORT_EXE}',
                 os.path.join(INPUT_FILES_DIR, file), 
-                os.path.join(OUTPUT_FILES_DIR_1000,f'{file[5]}.txt')])
+                os.path.join(OUTPUT_FILES_DIR_1000,f'{ofn}.txt')])
+
+
+def process_exe_times():
+    """
+        Read the quicksort execution times for each input size into a dataframe
+
+    Returns:
+        DataFrame: Execution times dataframe
+    """
+
+    df = pd.DataFrame(columns=["input size", "execution time (ms)"])
+
+    exe_time_millis = 0
+
+    # Read 10 input size files
+    for file in os.listdir(OUTPUT_FILES_DIR_10):
+        # only read execution time files
+        if "exe_time_millis" in file:
+            exe_time_millis = float(open(os.path.join(OUTPUT_FILES_DIR_10, file)).read().splitlines()[0])
+            df.loc[len(df)] = [10, exe_time_millis]
+
+    # Read 100 input size files
+    for file in os.listdir(OUTPUT_FILES_DIR_100):
+        # only read execution time files
+        if "exe_time_millis" in file:
+            exe_time_millis = float(open(os.path.join(OUTPUT_FILES_DIR_100, file)).read().splitlines()[0])
+            df.loc[len(df)] = [100, exe_time_millis]
+
+    # Read 1000 input size files
+    for file in os.listdir(OUTPUT_FILES_DIR_1000):
+        # only read execution time files
+        if "exe_time_millis" in file:
+            exe_time_millis = float(open(os.path.join(OUTPUT_FILES_DIR_1000, file)).read().splitlines()[0])
+            df.loc[len(df)] = [1000, exe_time_millis]
+
+    return df
+
+
+def save_and_plot(df: pd.DataFrame, final_output_dir):
+    """
+        Saves execution times for each file and the average executions times
+            for each input size
+        Generates and saves plot of average execution times
+
+    Args:
+        df (DataFrame): Execution times dataframe
+        final_output_dir (str): directory to save output files
+    """
+
+    # Save execution time for each file
+    with open(os.path.join(final_output_dir, OUTPUT_EXE_TIMES_FN), 'w+') as f:
+        f.write(df.to_csv(sep='\t', 
+                          header=['Input Size', 'Execution Time (ms)'],
+                          index=False).replace('\t', '    '))
+
+    # Seperate dataframe into each input size
+    df_10 = df[df['input size'] == 10]
+    df_100 = df[df['input size'] == 100]
+    df_1000 = df[df['input size'] == 1000]
+
+    # Save average execution time for each input size
+    ave_exe_time_10 = df[df['input size'] == 10]['execution time (ms)'].mean()
+    ave_exe_time_100 = df[df['input size'] == 100]['execution time (ms)'].mean()
+    ave_exe_time_1000 = df[df['input size'] == 1000]['execution time (ms)'].mean()
+
+    with open(os.path.join(final_output_dir, OUTPUT_AVG_EXE_TIMES_FN), 'w+') as f:
+        f.write('Input Size    Average Execution Time\n')
+        f.write(f'10    {ave_exe_time_10}\n')
+        f.write(f'100    {ave_exe_time_100}\n')
+        f.write(f'1000    {ave_exe_time_1000}\n')
+    
 
 
 if __name__ == '__main__':
     # create output file directory
-    if len(sys.argv) != 0:
-        print("Usage: ./time_quick_sort.py")
+    if len(sys.argv) != 2:
+        print("Usage: ./time_quick_sort.py [output directory]")
+        exit(1)
+
+    final_output_dir = sys.argv[1]
 
     # Setup up working directory
-    setup()
+    setup(final_output_dir)
 
     # Run C++ : Create input files and run/time quick sort
     create_input_files()
     run_quick_sort()
 
-    # Read into pandas
+    # Process and plot execution times
+    df = process_exe_times()
+    save_and_plot(df, final_output_dir)
