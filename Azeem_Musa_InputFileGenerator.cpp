@@ -19,3 +19,13 @@
 #include <fstream>
 #include <cstdlib>
 
+int generate_files();
+
+int main(int argc, char **argv) {
+    if (argc != 1) {
+        std::cout << "Usage: ./generate_files" << std::endl;
+        return 1;
+    }
+    
+    generate_files();
+}

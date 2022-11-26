@@ -3,7 +3,7 @@
  * Date   :     12/2/2022
  * File   :     Azeem_Musa_QuickSort.cpp
  * 
- * This C++ program implements the QuickSort Algorithm
+ * This C++ program implements the quick sort algorithm in the QuickSort class
  *  - It sorts an array of floating points given in an input file 
  *  - It outputs the sorted array in a given output file
  *  - It also outputs a file with the execution time of the algorithm
@@ -33,17 +33,29 @@
 #include <cmath>
 #include <chrono>
 
-// Function Headers
-int read_file(const char *filename, std::vector<double> &A);
-int quick_sort(std::vector<double> & A);
-int quick_sort(std::vector<double> & A, const size_t l, const size_t r);
-int hoarse_partition(std::vector<double> &A, const size_t l, const size_t r);
-int generate_random_int(size_t lower, size_t upper);
-void swap(std::vector<double> &A, const size_t i, const size_t j);
-int write_file(const char *filename, const std::vector<double> A);
-int write_time_to_file(const char *filename, double delta_millis);
-void print_array(const std::vector<double> A);
+std::string get_time_out_fn(std::string out_fn);
 
+class QuickSort {
+
+
+    private:
+        std::vector<double> A;
+        std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
+        std::chrono::time_point<std::chrono::high_resolution_clock> end_time;
+
+        int hoarse_partition(const int l, const int r);
+        int quick_sort(const int l, const int r);
+        void swap(const int i, const int j);
+        int generate_random_int(const int lower, const int upper);
+    
+    public:
+        QuickSort();
+        int read_file(const std::string filename);
+        int quick_sort();
+        int write_file(const std::string filename) const;
+        int write_time_to_file(const std::string filename) const;
+        void print_array() const;
+};
 
 // Entry Point - Driver Code to run QuickSort on input array
 int main(int argc, char **argv) {
@@ -53,45 +65,113 @@ int main(int argc, char **argv) {
         std::cout << "Usage: ./quicksort [input file] [output file]" << std::endl;
         return 1;
     }
+
+    // Get string filenames
+    std::string in_fn = argv[1];
     std::string out_fn = argv[2];
-    std::string exe_out_fn 
-        = out_fn.replace(out_fn.find(".txt"), 4, "").append("-exe_time_millis.txt");
-    std::srand(time(0));        // Used for random pivot generation
-    std::vector<double> A;      // Vector to represent input values
+    std::string time_out_fn = get_time_out_fn(out_fn);
     
-    // Read file into array A
-    if (!read_file(argv[1], A)) {
+    QuickSort quickSort;
+
+    // Read Input File
+    if (!quickSort.read_file(in_fn)) {
         // If read failed, write empty array to output file and exit
-        write_file(argv[2], A);
+        quickSort.write_file(out_fn);
         return 1;
     }
 
-    // Sort the array and find the execution time
-    auto start = std::chrono::high_resolution_clock::now();     // Start timer
-    quick_sort(A);                                              // Sort array
-    auto end = std::chrono::high_resolution_clock::now();       // End timer
 
-    double delta_millis = (end - start).count()/1000;
+    // Run and time quick sort algorithm
+    quickSort.quick_sort();
 
-    write_time_to_file(&(exe_out_fn)[0], delta_millis);
-    write_file(&out_fn[0], A);
+    // Write Sorted Array to Output File
+    quickSort.write_file(out_fn);
+
+    // Write Execution Time to Output File
+    quickSort.write_time_to_file(time_out_fn);
 
     return 0;
 }
 
-int quick_sort(std::vector<double> & A) {
+std::string get_time_out_fn(std::string out_fn) {
+    int ext_pos = out_fn.find(".");
+    if (ext_pos == std::string::npos) {
+        return out_fn.append("-exe_time_millis.txt");
+    }
+    else {
+        int ext_len = out_fn.length() - ext_pos;
+        return out_fn.replace(ext_pos, ext_len, "").append("-exe_time_millis.txt");
+    }
+}
+
+
+// QuickSort Functions
+
+QuickSort::QuickSort() {
     /**
-     * Implements the QuickSort algorithm using  the 
-     * Hoarse Partition Algorithm with random pivots
-     * Algorithm is implemented in overloaded recursive function
+     * Default Constructor
      * 
-     * Paramters:
-     *      A (vector<double>)  :   Array to sort
+     * Initialize A as empty vector
+     * Provides seed for random number generation later
+     */
+    // A = std::vector<double>();
+    std::srand(time(0));            // Used for random pivot generation
+}
+
+int QuickSort::read_file(std::string filename){
+    /**
+     * Reads a file from a given filename and populates the "A" vector
+     * 
+     * Input file
+     *  - File containing floating point numbers seperated by whitespace
+     * 
+     * Parameters:
+     *      filename (string)   :   name of file to read values from
+     * 
+     * Returns:
+     *      int :   Returns 1 if file reading was successful, 0 if not
+     */
+
+    std::ifstream in_file(filename);    // Input file stream
+    std::string line;                   // line of input file
+    double value;                       // each value read from file
+
+    if (in_file) {
+        // Get each line of input file 
+        while(std::getline(in_file, line)) { 
+            std::istringstream iss(line);   // Delim file line by whitespace
+            while (iss >> value) {
+                A.push_back(value);         // add each value to vector
+            }
+        }
+    }
+    else {
+        std::cerr << "Error Opening Input File" << std::endl;
+        return 0;   // return 0 to indicate failure
+    }
+
+    // Check if file was empty or did not exist
+    if (A.size() == 0) {
+        std::cerr << "Input file is empty or does not exist - array not populated" << std::endl;
+        return 0;   // return 0 to indicate failure
+    }
+    
+    return 1;
+}
+
+int QuickSort::quick_sort() {
+    /**
+     * Implements the QuickSort algorithm using the Hoarse Partition 
+     *  Algorithm with random pivots
+     * Records start and end time of algorithm
+     * Algorithm is implemented in overloaded recursive function
      * 
      * Returns:
      *      (int)   :   returns 1 to indicate success
      * 
      */
+
+    start_time = std::chrono::high_resolution_clock::now();     // Start timer
 
     if (A.size() == 0 || A.size() == 1) {
         // If array is empty or has only one element, do nothing
@@ -99,17 +179,21 @@ int quick_sort(std::vector<double> & A) {
     }
 
     // QuickSort starting with first and last indices
-    return quick_sort(A, 0, A.size()-1);     
+    int ret = quick_sort(0, A.size()-1);
+
+    end_time = std::chrono::high_resolution_clock::now();       // Stop timer
+
+    return ret;
 }
 
-int quick_sort(std::vector<double> &A, const size_t l, const size_t r) {
+int QuickSort::quick_sort(const int l, const int r) {
     /**
-     * Implements the QuickSort algorithm to sort a given array
+     * Implements the QuickSort algorithm to sort "A"
      * 
      * Parameters:
      *  A (vector<double>)  :   subarray to sort
-     *  l (int) :   Index to start subarray
-     *  r (int) :   Index to stop subarray
+     *  l (size_t) :   Index to start subarray
+     *  r (size_t) :   Index to stop subarray
      * 
      * Returns:
      *  (int)   : returns 1 to indicate success
@@ -119,47 +203,45 @@ int quick_sort(std::vector<double> &A, const size_t l, const size_t r) {
     // Continue until indices overlap
     if (l < r) {
         // Parition array and get index to split
-        s = hoarse_partition(A, l, r);
-        quick_sort(A, l, s-1);      // Sort left partition
-        quick_sort(A, s+1, r);      // Sort right partition
+        s = hoarse_partition(l, r);
+        quick_sort(l, s-1);         // Sort left partition
+        quick_sort(s+1, r);         // Sort right partition
     }
     return 1;
 }
 
-int hoarse_partition(std::vector<double> &A, const size_t l, const size_t r) {
+int QuickSort::hoarse_partition(const int l, const int r) {
     /**
      * Implements a hoarse partition on a provided subarray
-     * Input:
-     *      A (vector<double>)  :   array to partition
-     *      l (int) :   Index to start subarray
-     *      r (int) :   Index to end subarray
+     * 
+     * Parameters:
+     *      l (size_t)  :   Index to start subarray
+     *      r (size_t)  :   Index to end subarray
      * 
      * Returns:
-     *  (int)   :   Index that split occurs
+     *  (size_t)   :   Index that split occurs
      */
 
     // Generate random pivot and move the value to beginning of subarray
-    swap(A, l, generate_random_int(l, r+1));
+    swap(l, generate_random_int(l, r+1));
     int p = A[l]; 
     
-    size_t i = l;    // Start i at left index after pivot
-    size_t j = r+1;      // Start j at right index
-
-    // std::clog << "Pivot for subarray A[" << l << ".." << r << "] is: " << p << std::endl;
+    int i = l;    // Start i at left index after pivot
+    int j = r+1;      // Start j at right index
 
     // Repeat iteration until i and j overlap
     while (i < j) {
         do i++; while(A[i] < p && i < r);    // Increment i until a value greater than p is reached
         do j--; while(A[j] > p && j > l);      // Decrement j until a value less than p is reached
-        swap(A, i, j);
+        swap(i, j);
     }
-    swap(A, i, j);          // Undo last swap when i >= j
-    swap(A, l, j);          // Swap pivot with j, the new partition
+    swap(i, j);          // Undo last swap when i >= j
+    swap(l, j);          // Swap pivot with j, the new partition
 
     return j;           // Return the partition index
 }
 
-int generate_random_int(size_t lower, size_t upper) {
+int QuickSort::generate_random_int(const int lower, const int upper) {
     /**
      * Generates a random integer in the range [lower, upper)
      * 
@@ -186,12 +268,11 @@ int generate_random_int(size_t lower, size_t upper) {
     return std::floor(std::rand() % range + lower);
 }
 
-void swap(std::vector<double> &A, const size_t i, const size_t j) {
+void QuickSort::swap(const int i, const int j) {
     /**
      * This function swaps the values at the given indices
      * 
      * Parameters:
-     *      A (vector<double>)  :   array to modify
      *      i (int) :   first index to swap
      *      j (int) :   second index to swap
      */
@@ -219,54 +300,14 @@ void swap(std::vector<double> &A, const size_t i, const size_t j) {
     A[j] = tmp;
 }
 
-int read_file(const char *filename, std::vector<double> &A){
-    /**
-     * This function reads a file from a given filename and populates the
-     *  given array with the values
-     * Input file
-     *  - File containing floating point numbers seperated by whitespace
-     * 
-     * Parameters:
-     *      filename (char *)   :   name of file to read values from
-     *      A (vector<double>)  :   Output vector with values read from file
-     */
-
-    std::ifstream in_file(filename);    // Input file stream
-    std::string line;                   // line of input file
-    double value;                       // each value read from file
-
-    if (in_file) {
-        // Get each line of input file 
-        while(std::getline(in_file, line)) { 
-            std::istringstream iss(line);   // Delim file line by whitespace
-            while (iss >> value) {
-                A.push_back(value);         // add each value to vector
-            }
-        }
-    }
-    else {
-        std::cerr << "Error Opening Input File" << std::endl;
-        return 0;   // return 0 to indicate failure
-    }
-
-    // Check if file was empty or did not exist
-    if (A.size() == 0) {
-        std::cerr << "Input file is empty or does not exist - sorting not complete" << std::endl;
-        return 0;   // return 0 to indicate failure
-    }
-    
-    return 1;
-}
-
-int write_file(const char *filename, const std::vector<double> A) {
+int QuickSort::write_file(const std::string filename) const {
     /**
      * This function writes a vector to a file of a given name
      * Output file
      *  - Outputs values of array seperated by whitespace
      * 
      * Parameters:
-     *      filename (char *)   :   Name of file to write values to
-     *      A (vector<double>)  :   Vector with values to write to file
+     *      filename (string)   :   Name of file to write values to
      */
 
     std::ofstream out_file(filename);
@@ -284,16 +325,19 @@ int write_file(const char *filename, const std::vector<double> A) {
     return 1;
 }
 
-int write_time_to_file(const char *filename, double delta_millis) {
+int QuickSort::write_time_to_file(const std::string filename) const{
     /**
-     * This function writes a given time period to a file of a given name
+     * This function writes the execution time of the most recent quick sort
+     *  algorithm that was run to a file of a given name
      * Output file
      *  - Writes floating point time delta
      * 
      * Parameters:
-     *      filename (char *)   :   Name of file to write to
-     *      delta_millis (duration<double>)   :   time delta
+     *      filename (string)   :   Name of file to write to
      */
+
+    // Calculate execution time of most recent quick_sort
+    double delta_millis = (end_time - start_time).count()/1000;
 
     std::ofstream out_file(filename);
 
@@ -308,8 +352,10 @@ int write_time_to_file(const char *filename, double delta_millis) {
     return 1;
 }
 
-
-void print_array(const std::vector<double> A){
+void QuickSort::print_array() const {
+    /**
+     * Prints "A" to stdout
+     */
     for (auto num : A){
         std::cout << num  << " ";
     }
