@@ -19,11 +19,12 @@
  */
 
 #include <iostream>
-#include <vector>
 #include <string>
 #include <fstream>
 #include <cstdlib>
 #include <filesystem>
+#include <random>
+#include <climits>
 
 int generate_files(std::string dir);
 int generate_files(int num_of_files, int num_of_values, std::string dir);
@@ -33,7 +34,6 @@ int main(int argc, char **argv) {
         std::cout << "Usage: ./generate_files [Output Directory]" << std::endl;
         return 1;
     }
-    std::srand(time(0));            // Used for random number generation
 
     std::string dir = argv[1];
     if (!generate_files(dir)) {
@@ -74,8 +74,6 @@ int generate_files(int num_of_files, int num_of_values, std::string dir) {
      *  (int)   :   Returns 1 if successful, 0 if not
     */
 
-    int random = 0;
-
     for (int i=0; i<num_of_files; i++) {
 
         std::filesystem::path p(dir + "/" + std::to_string(num_of_values)
@@ -85,8 +83,10 @@ int generate_files(int num_of_files, int num_of_values, std::string dir) {
         if (out_file) {
             // Write <num_of_values> random double values
             for (int j=0; j<num_of_values; j++) {
-                random = std::rand(); 
-                out_file << random << " ";
+                std::random_device rand_dev;            
+                std::mt19937 generator(rand_dev());     // RNG
+                std::uniform_int_distribution<int> distr(-100000, 100000);
+                out_file << distr(generator) << " ";
             }
         }
 
