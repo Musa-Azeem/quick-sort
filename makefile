@@ -12,7 +12,7 @@ quick_sort_exe := Azeem_Musa_QuickSort
 num_gen_exe := InputFileGenerator
 
 # compile flags
-flags := -std=c++17 -Wall
+flags := -std=c++17
 
 # compile command
 compile.cc = $(cc) $(flags) $^ -o $@
