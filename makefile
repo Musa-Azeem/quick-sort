@@ -25,4 +25,4 @@ $(num_gen_exe): $(num_gen_src)
 	$(compile.cc)
 
 clean:
-	rm -r $(quick_sort_exe) $(num_gen_exe)
+	rm -rf $(quick_sort_exe) $(num_gen_exe)

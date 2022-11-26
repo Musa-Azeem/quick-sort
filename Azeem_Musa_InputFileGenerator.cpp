@@ -8,6 +8,9 @@
  * It generates 75 random input files (25 each of 10, 100, and 1000 
  *   floating point numbers)
  * 
+ * Usage: ./Azeem_Musa_InputFileGenerator [Output Directory]
+ * 
+ * 
  * Output Format:
  *  - Output files are ASCII and contain random floating-point numbers
  *    seperated by whitespace
@@ -27,7 +30,7 @@ int generate_files(int num_of_files, int num_of_values, std::string dir);
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        std::cout << "Usage: ./generate_files [output directory]" << std::endl;
+        std::cout << "Usage: ./generate_files [Output Directory]" << std::endl;
         return 1;
     }
     std::srand(time(0));            // Used for random number generation
