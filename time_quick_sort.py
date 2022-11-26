@@ -34,6 +34,7 @@ import seaborn as sns
 import sys
 import os
 import subprocess
+import math
 
 INPUT_FILE_GEN_EXE = 'Azeem_Musa_InputFileGenerator'
 QUICK_SORT_EXE = 'Azeem_Musa_QuickSort'
@@ -44,6 +45,7 @@ OUTPUT_FILES_DIR_100 = f'{FILES_DIR}/output-files/100'
 OUTPUT_FILES_DIR_1000 = f'{FILES_DIR}/output-files/1000'
 OUTPUT_EXE_TIMES_FN = "Azeem_Musa_executionTime.txt"
 OUTPUT_AVG_EXE_TIMES_FN = "Azeem_Musa_averageExecutionTime.txt"
+OUTPUT_PLOT_FN = "Azeem_Musa_plotAverageExecutionTime.jpg"
 
 
 
@@ -164,24 +166,29 @@ def save_and_plot(df: pd.DataFrame, final_output_dir):
                           header=['Input Size', 'Execution Time (ms)'],
                           index=False).replace('\t', '    '))
 
-    # Seperate dataframe into each input size
-    df_10 = df[df['input size'] == 10]
-    df_100 = df[df['input size'] == 100]
-    df_1000 = df[df['input size'] == 1000]
-
     # Save average execution time for each input size
-    ave_exe_time_10 = df[df['input size'] == 10]['execution time (ms)'].mean()
-    ave_exe_time_100 = df[df['input size'] == 100]['execution time (ms)'].mean()
-    ave_exe_time_1000 = df[df['input size'] == 1000]['execution time (ms)'].mean()
+    ave_exe_time = {'input size': [10, 100,1000], 
+                    'average execution time (ms)': [df[df['input size'] == 10]['execution time (ms)'].mean(),
+                                                    df[df['input size'] == 100]['execution time (ms)'].mean(),
+                                                    df[df['input size'] == 1000]['execution time (ms)'].mean()]}
+    df_avg = pd.DataFrame(ave_exe_time)
 
     with open(os.path.join(final_output_dir, OUTPUT_AVG_EXE_TIMES_FN), 'w+') as f:
-        f.write('Input Size    Average Execution Time\n')
-        f.write(f'10    {ave_exe_time_10}\n')
-        f.write(f'100    {ave_exe_time_100}\n')
-        f.write(f'1000    {ave_exe_time_1000}\n')
+        f.write(df_avg.to_csv(sep='\t', 
+                              header=['Input Size', 'Average Execution Time (ms)'],
+                              index=False).replace('\t', '    '))
+    
+    # Plot Average Execution Time
+    plot = sns.lineplot(data=df_avg, x='input size', y='average execution time (ms)')
+    plot.set_xticks(range(0, 1001, 100))
+    plot.set_yticks(range(0, math.ceil(max(df_avg['average execution time (ms)']))+10, 10))
+    plot.set_xlabel('Input Size')
+    plot.set_ylabel('Average Execution Time (ms)')
+    plot.set_title('Average Execution Time for Quick Sort')
+    plot.get_figure().savefig(os.path.join(final_output_dir, OUTPUT_PLOT_FN))
     
 
-
+# Entry point
 if __name__ == '__main__':
     # create output file directory
     if len(sys.argv) != 2:
@@ -200,9 +207,3 @@ if __name__ == '__main__':
     # Process and plot execution times
     df = process_exe_times()
     save_and_plot(df, final_output_dir)
-
-    df = pd.DataFrame()
-    for file in os.listdir(INPUT_FILES_DIR):
-        tmp = pd.read_csv(f"{INPUT_FILES_DIR}/{file}", sep=' ', header=None).T
-        df = pd.concat([df, tmp[:-1]], axis=0, ignore_index=True)
-    print(df.describe())
