@@ -1,14 +1,14 @@
 /**
  * Author :     Musa Azeem
  * Date   :     12/2/2022
- * File   :     Azeem_Musa_InputFileGenerator.cpp
+ * File   :     InputFileGenerator.cpp
  * 
  * This C++ program produces random input files to test and time the quick sort
  *   implementation in Azeem_Musa_QuickSort.cpp
  * It generates 75 random input files (25 each of 10, 100, and 1000 
  *   floating point numbers)
  * 
- * Usage: ./Azeem_Musa_InputFileGenerator [Output Directory]
+ * Usage: ./InputFileGenerator [Output Directory]
  * 
  * 
  * Output Format:
@@ -31,7 +31,7 @@ int generate_files(int num_of_files, int num_of_values, std::string dir);
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        std::cout << "Usage: ./generate_files [Output Directory]" << std::endl;
+        std::cout << "Usage: ./InputFileGenerator [Output Directory]" << std::endl;
         return 1;
     }
 

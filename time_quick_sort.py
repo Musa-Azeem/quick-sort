@@ -36,7 +36,7 @@ import os
 import subprocess
 import math
 
-INPUT_FILE_GEN_EXE = 'Azeem_Musa_InputFileGenerator'
+INPUT_FILE_GEN_EXE = 'InputFileGenerator'
 QUICK_SORT_EXE = 'Azeem_Musa_QuickSort'
 FILES_DIR = '__time_quick_sort_files__'
 INPUT_FILES_DIR = f'{FILES_DIR}/input-files'
