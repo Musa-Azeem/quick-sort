@@ -36,10 +36,10 @@
 // Function Headers
 int read_file(const char *filename, std::vector<double> &A);
 int quick_sort(std::vector<double> & A);
-int quick_sort(std::vector<double> & A, const int l, const int r);
-int hoarse_partition(std::vector<double> &A, const int l, const int r);
-int generate_random_int(int lower, int upper);
-void swap(std::vector<double> &A, const int i, const int j);
+int quick_sort(std::vector<double> & A, const size_t l, const size_t r);
+int hoarse_partition(std::vector<double> &A, const size_t l, const size_t r);
+int generate_random_int(size_t lower, size_t upper);
+void swap(std::vector<double> &A, const size_t i, const size_t j);
 int write_file(const char *filename, const std::vector<double> A);
 int write_time_to_file(const char *filename, double delta_millis);
 void print_array(const std::vector<double> A);
@@ -102,7 +102,7 @@ int quick_sort(std::vector<double> & A) {
     return quick_sort(A, 0, A.size()-1);     
 }
 
-int quick_sort(std::vector<double> &A, const int l, const int r) {
+int quick_sort(std::vector<double> &A, const size_t l, const size_t r) {
     /**
      * Implements the QuickSort algorithm to sort a given array
      * 
@@ -126,7 +126,7 @@ int quick_sort(std::vector<double> &A, const int l, const int r) {
     return 1;
 }
 
-int hoarse_partition(std::vector<double> &A, const int l, const int r) {
+int hoarse_partition(std::vector<double> &A, const size_t l, const size_t r) {
     /**
      * Implements a hoarse partition on a provided subarray
      * Input:
@@ -142,8 +142,8 @@ int hoarse_partition(std::vector<double> &A, const int l, const int r) {
     swap(A, l, generate_random_int(l, r+1));
     int p = A[l]; 
     
-    int i = l;    // Start i at left index after pivot
-    int j = r+1;      // Start j at right index
+    size_t i = l;    // Start i at left index after pivot
+    size_t j = r+1;      // Start j at right index
 
     // std::clog << "Pivot for subarray A[" << l << ".." << r << "] is: " << p << std::endl;
 
@@ -159,7 +159,7 @@ int hoarse_partition(std::vector<double> &A, const int l, const int r) {
     return j;           // Return the partition index
 }
 
-int generate_random_int(int lower, int upper) {
+int generate_random_int(size_t lower, size_t upper) {
     /**
      * Generates a random integer in the range [lower, upper)
      * 
@@ -186,7 +186,7 @@ int generate_random_int(int lower, int upper) {
     return std::floor(std::rand() % range + lower);
 }
 
-void swap(std::vector<double> &A, const int i, const int j) {
+void swap(std::vector<double> &A, const size_t i, const size_t j) {
     /**
      * This function swaps the values at the given indices
      * 
