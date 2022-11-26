@@ -200,3 +200,9 @@ if __name__ == '__main__':
     # Process and plot execution times
     df = process_exe_times()
     save_and_plot(df, final_output_dir)
+
+    df = pd.DataFrame()
+    for file in os.listdir(INPUT_FILES_DIR):
+        tmp = pd.read_csv(f"{INPUT_FILES_DIR}/{file}", sep=' ', header=None).T
+        df = pd.concat([df, tmp[:-1]], axis=0, ignore_index=True)
+    print(df.describe())
