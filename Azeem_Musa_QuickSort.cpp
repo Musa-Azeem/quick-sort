@@ -42,10 +42,12 @@ std::tuple<std::string, std::string> get_out_paths(std::string in_path,
 int run_quick_sort_on_input_files(std::string in_dir, 
                                   std::string out_dir, 
                                   std::string time_dir);
-int find_averages();
+void update_exe_times_vector(std::vector<std::vector<double>> &exe_times, 
+                             int i, 
+                             double time);
+int find_average_and_save_times(std::vector<std::vector<double>> exe_times);
 
 class QuickSort {
-
 
     private:
         std::vector<double> A;
@@ -62,7 +64,7 @@ class QuickSort {
         int read_file(const std::string filename);
         int quick_sort();
         int write_file(const std::string filename) const;
-        int write_time_to_file(const std::string filename) const;
+        double write_time_to_file(const std::string filename) const;
         void print_array() const;
 };
 
@@ -135,11 +137,21 @@ int run_quick_sort_on_input_files(std::string in_dir, std::string out_dir, std::
         return 0;
     }
 
+    std::string in_path;
+    std::string out_path;
+    std::string out_time_path;
+    double exe_time_millis;
+
+    // vector for execution times of [10, 100, 1000] input sizes
+    std::vector<std::vector<double>> exe_times;
+    exe_times.push_back(std::vector<double>());
+    exe_times.push_back(std::vector<double>());
+    exe_times.push_back(std::vector<double>());
+
+
     // Read each input file and run quick sort on them
     for (const auto & entry : fs::directory_iterator(in_dir)) {
-        std::string in_path = std::string(entry.path());
-        std::string out_path;
-        std::string out_time_path;
+        in_path = std::string(entry.path());
         std::tie(out_path, out_time_path) = get_out_paths(in_path, out_dir, time_dir);
 
         // Read File
@@ -154,27 +166,68 @@ int run_quick_sort_on_input_files(std::string in_dir, std::string out_dir, std::
 
         // Write Sorted Array
         q.write_file(out_path);
-        q.write_time_to_file(out_time_path);
+
+        // Write and save execution time
+        exe_time_millis = q.write_time_to_file(out_time_path);
+        if (exe_time_millis >= 0) {
+            if (in_path.find("10-") != std::string::npos) {
+                // This input file should have 10 inputs
+                exe_times[0].push_back(exe_time_millis);
+            }
+            else if (in_path.find("100-") != std::string::npos) {
+                // This input file should have 100 inputs
+                exe_times[1].push_back(exe_time_millis);
+            }
+            else if (in_path.find("1000-") != std::string::npos) {
+                // This input file should have 1000 inputs
+                exe_times[2].push_back(exe_time_millis);
+            }
+        }
     }
 
-
+    // Write times and averages
+    find_average_and_save_times(exe_times);
     return 1;
 }
 
-int find_and_save_averages(std::string time_dir, std::vector<std::vector<double>> exe_times) {
+int find_average_and_save_times(std::vector<std::vector<double>> exe_times) {
     /**
      * Finds the average execution time for 10, 100, and 1000 input sizes
-     * Writes these averages to a file in the given output time directory
+     * Writes the execution time and theaverages to a file in the given output time directory
      *
      * Parameters:
-     *      time_dir (string)   :   directory to write times to
-     *      exe_time (vector<vector<double>>)   :   execution times for [10, 100, 1000] sizes
+     *      exe_times (vector<vector<double>>): Total number of files
+     *          and total execution times for each input size
      *
      * Returns:
      *      (int)   :   returns 1 for success
      */
 
-     
+    for (auto exe_time : exe_times[0]) {
+        std::cout << exe_time << std::endl;
+    }
+    for (auto exe_time : exe_times[1]) {
+        std::cout << exe_time << std::endl;
+    }
+    for (auto exe_time : exe_times[2]) {
+        std::cout << exe_time << std::endl;
+    }
+    // std::ofstream out_file(fs::path(time_dir+"/"+"average-exe-times"));
+
+    // if (out_file) {
+    //     for (auto val : A) {
+    //         out_file << val << " ";
+    //     }
+    // }    
+    // else {
+    //     std::cerr << "Error Opening Output File" << std::endl;
+    //     return 0;   // return 0 to indicate failure
+    // }
+
+    // for (auto t : exe_times) {
+
+    // }
+
 }
 
 // QuickSort Functions
@@ -399,15 +452,18 @@ int QuickSort::write_file(const std::string filename) const {
     return 1;
 }
 
-int QuickSort::write_time_to_file(const std::string filename) const{
+double QuickSort::write_time_to_file(const std::string filename) const{
     /**
-     * This function writes the execution time of the most recent quick sort
-     *  algorithm that was run to a file of a given name
+     * This function writes the execution time in milliseconds of the most 
+     *   recent quick sort algorithm that was run to a file of a given name
      * Output file
      *  - Writes floating point time delta
      * 
      * Parameters:
      *      filename (string)   :   Name of file to write to
+     *
+     * Returns:
+     *      (double)    :   execution time in milliseconds
      */
 
     // Calculate execution time of most recent quick_sort
@@ -420,10 +476,10 @@ int QuickSort::write_time_to_file(const std::string filename) const{
     }    
     else {
         std::cerr << "Error Opening Output File" << std::endl;
-        return 0;   // return 0 to indicate failure
+        return -1;   // return -1 to indicate failure
     }
 
-    return 1;
+    return delta_millis;
 }
 
 void QuickSort::print_array() const {
