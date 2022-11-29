@@ -25,6 +25,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 #include <vector>
 #include <string>
 #include <sstream>
@@ -33,7 +34,15 @@
 #include <cmath>
 #include <chrono>
 
-std::string get_time_out_fn(std::string out_fn);
+namespace fs = std::filesystem;
+
+std::tuple<std::string, std::string> get_out_paths(std::string in_path, 
+                                                   std::string out_dir,  
+                                                   std::string time_dir);
+int run_quick_sort_on_input_files(std::string in_dir, 
+                                  std::string out_dir, 
+                                  std::string time_dir);
+int find_averages();
 
 class QuickSort {
 
@@ -61,49 +70,112 @@ class QuickSort {
 int main(int argc, char **argv) {
     
     // Ensure the right number of command line arguments were given
-    if (argc != 3){
-        std::cout << "Usage: ./quicksort [input file] [output file]" << std::endl;
+    if (argc != 4){
+        std::cout << "Usage: ./quicksort [Input Files Directory]" << 
+            "[Output Sorted Directory] [Output Time Directory]" << std::endl;
         return 1;
     }
 
-    // Get string filenames
-    std::string in_fn = argv[1];
-    std::string out_fn = argv[2];
-    std::string time_out_fn = get_time_out_fn(out_fn);
-    
-    QuickSort quickSort;
+    // Get string directory names
+    std::string input_dir = argv[1];
+    std::string output_dir = argv[2];
+    std::string output_time_dir = argv[3];
 
-    // Read Input File
-    if (!quickSort.read_file(in_fn)) {
-        // If read failed, write empty array to output file and exit
-        quickSort.write_file(out_fn);
+    // Run quick sort on each of the 75 input files
+    if (!run_quick_sort_on_input_files(input_dir, output_dir, output_time_dir)) {
         return 1;
     }
-
-
-    // Run and time quick sort algorithm
-    quickSort.quick_sort();
-
-    // Write Sorted Array to Output File
-    quickSort.write_file(out_fn);
-
-    // Write Execution Time to Output File
-    quickSort.write_time_to_file(time_out_fn);
 
     return 0;
 }
 
-std::string get_time_out_fn(std::string out_fn) {
-    int ext_pos = out_fn.find(".");
-    if (ext_pos == std::string::npos) {
-        return out_fn.append("-exe_time_millis.txt");
-    }
-    else {
-        int ext_len = out_fn.length() - ext_pos;
-        return out_fn.replace(ext_pos, ext_len, "").append("-exe_time_millis.txt");
-    }
+std::tuple<std::string, std::string> get_out_paths(std::string in_path, 
+                                                   std::string out_dir,  
+                                                   std::string time_dir) {
+    /**
+     * Creates an output filename using input filepath
+     * 
+     * Parameters: 
+     *      in_path (string)  :   input filepath
+     *      out_dir (string)  :   output directory
+     *  
+     * Returns:
+     *      (string)    :   Output filename
+     */
+     
+    std::string in_fn = in_path.substr(in_path.find_last_of("/") + 1);
+
+    std::string out_fn = in_fn.replace(in_fn.find_last_of(".txt") + 1, 4, "-sorted.txt");
+    std::string out_time_fn = in_fn.replace(in_fn.find_last_of(".txt") + 1, 4, "-exe-time.txt");
+
+    return std::make_tuple(fs::path(out_dir+"/"+out_fn), 
+                           fs::path(time_dir+"/"+out_time_fn));
 }
 
+int run_quick_sort_on_input_files(std::string in_dir, std::string out_dir, std::string time_dir) {
+    /**
+     * Runs the quick sort algorithm on each of the files in the given directory
+     * Outputs the sorted arrays and the execution times for each input size
+     * 
+     * Parameters:
+     *      in_dir (string) :   name of directory containing files
+     *      out_dir (string):   name of directory to write sorted files to
+     *      time_dir (string):  name of directory to write execution times to
+     * 
+     * Returns:
+     *      int :   returns 1 to indicate success or 0 for failure
+     */
+    
+    // Initialize instance of QuickSort
+    QuickSort q;
+
+    // Check if directory exists
+    if (!fs::is_directory(fs::status(in_dir))) {
+        std::cout << "Input Directory does not exist - Exiting" << std::endl;
+        return 0;
+    }
+
+    // Read each input file and run quick sort on them
+    for (const auto & entry : fs::directory_iterator(in_dir)) {
+        std::string in_path = std::string(entry.path());
+        std::string out_path;
+        std::string out_time_path;
+        std::tie(out_path, out_time_path) = get_out_paths(in_path, out_dir, time_dir);
+
+        // Read File
+        if (!q.read_file(in_path)) {
+            // If read failed, write empty array to output file and exit
+            q.write_file(out_path);
+            return 0;
+        }
+
+        // Run Quick Sort
+        q.quick_sort();
+
+        // Write Sorted Array
+        q.write_file(out_path);
+        q.write_time_to_file(out_time_path);
+    }
+
+
+    return 1;
+}
+
+int find_and_save_averages(std::string time_dir, std::vector<std::vector<double>> exe_times) {
+    /**
+     * Finds the average execution time for 10, 100, and 1000 input sizes
+     * Writes these averages to a file in the given output time directory
+     *
+     * Parameters:
+     *      time_dir (string)   :   directory to write times to
+     *      exe_time (vector<vector<double>>)   :   execution times for [10, 100, 1000] sizes
+     *
+     * Returns:
+     *      (int)   :   returns 1 for success
+     */
+
+     
+}
 
 // QuickSort Functions
 
@@ -114,7 +186,7 @@ QuickSort::QuickSort() {
      * Initialize A as empty vector
      * Provides seed for random number generation later
      */
-    // A = std::vector<double>();
+    A = std::vector<double>();
     std::srand(time(0));            // Used for random pivot generation
 }
 
@@ -135,6 +207,8 @@ int QuickSort::read_file(std::string filename){
     std::ifstream in_file(filename);    // Input file stream
     std::string line;                   // line of input file
     double value;                       // each value read from file
+
+    A = std::vector<double>();          // Initialize new array
 
     if (in_file) {
         // Get each line of input file 
