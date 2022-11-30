@@ -10,6 +10,7 @@ src := $(quick_sort_src) $(num_gen_src)
 # final executables
 quick_sort_exe := Azeem_Musa_QuickSort
 num_gen_exe := InputFileGenerator
+exe := $(quick_sort_exe) $(num_gen_exe)
 
 # compile flags
 flags := -std=c++17
@@ -27,12 +28,15 @@ $(quick_sort_exe): $(quick_sort_src)
 $(num_gen_exe): $(num_gen_src)
 	$(compile.cc)
 
-run: $(src)
+run: $(exe)
 	rm -rf $(input_files_dir)
 	echo "$(input_files_dir)/10 10 n $(input_files_dir)/100 100 n $(input_files_dir)/1000 1000 y" > $(user_in)
 	./$(num_gen_exe) $(input_files_dir)
 	./$(quick_sort_exe) < $(user_in)
-	rm -rf $(input_files_dir) $(user_in)
+	make clean_all
 
 clean:
-	rm -rf $(quick_sort_exe) $(num_gen_exe)
+	rm -rf $(exe)
+
+clean_all: clean
+	rm -rf $(input_files_dir) $(user_in)

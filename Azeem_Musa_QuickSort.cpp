@@ -68,6 +68,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <chrono>
+#include <ctime>
 #include <map>
 
 namespace fs = std::filesystem;
@@ -190,7 +191,12 @@ int run_quick_sort_on_input_files(const std::map<std::string,int> &dirs) {
     QuickSort q;
 
     // Create Root Output Directory
-    std::string out_dir = "output";     // TODO time
+    std::time_t time;
+	std::time(&time);
+	tm * curr_tm = localtime(&time);
+	char _out_dir[100];
+    std::strftime(_out_dir, 50, "output_%y-%m-%d_%H.%M.%S", curr_tm);
+    std::string out_dir(_out_dir);
     fs::create_directory(out_dir);
 
     std::string in_path;
