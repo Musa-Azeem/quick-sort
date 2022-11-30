@@ -6,21 +6,56 @@
  * This C++ program implements the quick sort algorithm in the QuickSort class
  *  - It sorts an array of floating points given in an input file 
  *  - It outputs the sorted array in a given output file
- *  - It also outputs a file with the execution time of the algorithm
+ *  - It outputs the execution time of the algorithm to a given output file
  * 
- * Usage: ./Azeem_Musa_QuickSort [input_file] [output_file]
+ * This C++ program also implements a UI to run quick sort on input files
+ *  - Can provide any number of directories containing input files
+ *  - Will sort the array of values in each file, and output the sorted arrays
+ *  - Will save the execution time for each file
+ *  - Will combine the execution times in a tab seperating file
+ *  - Will find the average execution for each input size and save it in a file
+ * 
+ * 
+ * Usage: ./Azeem_Musa_QuickSort
  *  
  * 
  * Input Format:
  *  - Input file should be an ASCII file that contains a list of unsorted
  *    floating-point numbers separated by a blank space
+ *  - Input directories should contain n input files, each containing the same
+ *    number of values
  * 
  * Output Format:
- *  - First output file is an ASCII file containing a list of sorted 
+ *  - Files are saved in a directory, with the following format:
+ * 
+ *      output
+ *      ├── Azeem_Musa_averageExecutionTime.txt
+ *      ├── Azeem_Musa_executionTime.txt
+ *      ├── X
+ *      │   ├── execution-time
+ *      │       ├── 0.txt
+ *      │       ├── ...
+ *      │       └── n.txt
+ *      │   └── sorted
+ *      │       ├── 0.txt
+ *      │       ├── ...
+ *      │       └── n.txt
+ *      └── Y
+ *          ├── ...
+ *    
+ *    where X, Y, ... are the input directories and files 0 to n are 
+ *    the files within them
+ *  - Each "sorted" output file is an ASCII file containing a list of sorted 
  *    floating-point numbers seperated by a blank space
- *  - Second output file (named <filename>-exe_time_millis.txt) is an
- *    ASCII file containing the execution time in milliseconds taken to run
- *    the quick sort algorithm
+ *  - Each "execution-time" output file is an ASCII file containing the 
+ *    execution time in milliseconds taken to run the quick sort algorithm
+ *    for that file
+ *  - Azeem_Musa_averageExecutionTime.txt contains the average execution time
+ *    for all of the input files combined. It is a tab seperated file with the format:
+ *          [Input Size    Average Execution Time (ms)]
+ *  - Azeem_Musa_executionTime.txt contains the execution time for all of the input 
+ *    files combined. It is a tab seperated file with the format:
+ *          [Input Size    Execution Time (ms)]
  */
 
 #include <iostream>
@@ -40,7 +75,7 @@ namespace fs = std::filesystem;
 
 std::map<std::string,int> get_dirs_from_user();
 int run_quick_sort_on_input_files(const std::map<std::string,int> &dirs);
-int find_average_and_save_times(std::string out_dir, 
+int find_average_and_save_times(const std::string out_dir, 
     const std::map<int, std::vector<double>> &exe_times);
 
 class QuickSort {
@@ -119,7 +154,7 @@ std::map<std::string,int> get_dirs_from_user() {
         {
             std::cin.clear();
             std::cin.ignore();
-            std::cout << "Invalid entry. Enter an Integer";
+            std::cout << "Invalid entry. Enter an Integer: ";
             std::cin >> input_size;
         }
 
@@ -226,7 +261,7 @@ int run_quick_sort_on_input_files(const std::map<std::string,int> &dirs) {
     return find_average_and_save_times(out_dir, exe_times);
 } 
 
-int find_average_and_save_times(std::string out_dir, 
+int find_average_and_save_times(const std::string out_dir, 
     const std::map<int, std::vector<double>> &exe_times) {
     /**
      * Finds the average execution time of all the given files for each input size
