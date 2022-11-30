@@ -39,14 +39,8 @@ namespace fs = std::filesystem;
 
 
 std::map<std::string,int> get_dirs_from_user();
-std::tuple<std::string, std::string> get_out_paths(std::string in_path, 
-                                                   std::string out_dir,  
-                                                   std::string time_dir);
-int run_quick_sort_on_input_files(std::string in_dir);
-void update_exe_times_vector(std::vector<std::vector<double>> &exe_times, 
-                             int i, 
-                             double time);
-int find_average_and_save_times(std::vector<std::vector<double>> exe_times);
+int run_quick_sort_on_input_files(const std::map<std::string,int> &dirs);
+int find_average_and_save_times(const std::vector<std::vector<double>> exe_times);
 
 class QuickSort {
 
@@ -80,13 +74,10 @@ int main(int argc, char **argv) {
 
     std::map<std::string, int> dirs = get_dirs_from_user();
 
-    // Get string directory names
-    // std::string input_dir = argv[1];
-
-    // // Run quick sort on each of the 75 input files
-    // if (!run_quick_sort_on_input_files(input_dir)) {
-    //     return 1;
-    // }
+    // Run quick sort on each of the 75 input files
+    if (!run_quick_sort_on_input_files(dirs)) {
+        return 1;
+    }
 
     return 0;
 }
@@ -141,43 +132,23 @@ std::map<std::string,int> get_dirs_from_user() {
         }
     }
 
+    for(auto k:dirs) {
+        std::cout << k.first << " " << k.second << std::endl;
+    }
+
     return dirs;
 }
 
-std::tuple<std::string, std::string> get_out_paths(std::string in_path, 
-                                                   std::string sorted_dir,  
-                                                   std::string time_dir) {
-    /**
-     * Creates an output filename using input filepath
-     * 
-     * Parameters: 
-     *      in_path (string)   :   input filepath
-     *      sorted_dir (string):   output directory
-     *      time_dir (string)  :   output directory for execution time
-     *  
-     * Returns:
-     *  (tuple<string, string>) :   output filepaths
-     */
-     
-    std::string in_fn = in_path.substr(in_path.find_last_of("/") + 1);
-
-
-    std::string sorted_fn = in_fn.replace(in_fn.find_last_of("."), 4, "-sorted.txt");
-    std::string time_fn = in_fn.replace(in_fn.find_last_of("."), 4, "-exe-time.txt");
-
-    return std::make_tuple(fs::path(sorted_dir+"/"+sorted_fn), 
-                           fs::path(time_dir+"/"+time_fn));
-}
-
-int run_quick_sort_on_input_files(std::string in_dir) {
+int run_quick_sort_on_input_files(const std::map<std::string,int> &dirs) {
     /**
      * Runs the quick sort algorithm on each of the files in the given directory
      * Outputs the sorted arrays and the execution times for each input size
      * 
      * Parameters:
-     *      in_dir (string) :   name of directory containing files
-     *      out_dir (string):   name of directory to write sorted files to
-     *      time_dir (string):  name of directory to write execution times to
+     *      dirs (map<string, int>) :   map of directory names to the input size of
+     *          the files they contain
+     *          (dir.first = path to directory)
+     *          (dir.second = input size)
      * 
      * Returns:
      *      int :   returns 1 to indicate success or 0 for failure
@@ -186,73 +157,92 @@ int run_quick_sort_on_input_files(std::string in_dir) {
     // Initialize instance of QuickSort
     QuickSort q;
 
-    // Check if directory exists
-    if (!fs::is_directory(fs::status(in_dir))) {
-        std::cout << "Input Directory does not exist - Exiting" << std::endl;
-        return 0;
-    }
-
-    // Create Directories
-    std::string sorted_dir = "output/sorted";
-    std::string time_dir = "output/execution-times";
-    fs::create_directory("output");
-    fs::create_directory(sorted_dir);
-    fs::create_directory(time_dir);
+    // Create Root Output Directory
+    std::string out_dir = "output";     // TODO time
+    fs::create_directory(out_dir);
 
     std::string in_path;
-    std::string sorted_path;
-    std::string time_path;
+    std::string in_fn;
+    std::string sorted_dir;
+    std::string time_dir;
     double exe_time_millis;
 
-    // vector for execution times of [10, 100, 1000] input sizes
-    std::vector<std::vector<double>> exe_times;
-    exe_times.push_back(std::vector<double>());
-    exe_times.push_back(std::vector<double>());
-    exe_times.push_back(std::vector<double>());
+    // map of input size to vector execution times of each file
+    std::map<int, std::vector<double>> exe_times;
 
+    // Repeat for each provided directory
+    for (auto m : dirs) {
+        // Create entry in exe_times for this directory if this input size is new
+        std::string in_dir = m.first;
+        int input_size = m.second;
 
-    // Read each input file and run quick sort on them
-    for (const auto & entry : fs::directory_iterator(in_dir)) {
-        in_path = std::string(entry.path());
-        std::tie(sorted_path, time_path) = get_out_paths(in_path, sorted_dir, time_dir);
-
-        // Read File
-        if (!q.read_file(in_path)) {
-            // If read failed, write empty array to output file and exit
-            q.write_file(sorted_path);
+        // Check if directory exists
+        if (!fs::is_directory(fs::status(in_dir))) {
+            std::cout << "Input Directory does not exist - Exiting" << std::endl;
             return 0;
         }
 
-        // Run Quick Sort
-        q.quick_sort();
+        if(!exe_times.count(input_size)) {
+            exe_times.insert(std::pair<int, std::vector<double>>(
+                input_size, std::vector<double>()));
+        }
 
-        // Write Sorted Array
-        q.write_file(sorted_path);
+        // Create Output Directories
+        sorted_dir = fs::path(out_dir +"/"+ in_dir + "-sorted");
+        time_dir = fs::path(out_dir +"/"+ in_dir + "-execution-time");
+        fs::create_directory(sorted_dir);
+        fs::create_directory(time_dir);
 
-        // Write and save execution time
-        exe_time_millis = q.write_time_to_file(time_path);
-        if (exe_time_millis >= 0) {
-            if (in_path.find("10-") != std::string::npos) {
-                // This input file should have 10 inputs
-                exe_times[0].push_back(exe_time_millis);
-            }
-            else if (in_path.find("100-") != std::string::npos) {
-                // This input file should have 100 inputs
-                exe_times[1].push_back(exe_time_millis);
-            }
-            else if (in_path.find("1000-") != std::string::npos) {
-                // This input file should have 1000 inputs
-                exe_times[2].push_back(exe_time_millis);
-            }
+        // Read each input file in this dir and run quick sort on them
+        for (const auto & entry : fs::directory_iterator()) {
+            in_path = std::string(entry.path());    // Path to each file
+            in_fn = in_path.substr(in_path.find_last_of("/") + 1);  // filename
+
+            std::cout << in_fn << std::endl;
         }
     }
 
-    // // Write times and averages
+    // // Read each input file and run quick sort on them
+    // for (const auto & entry : fs::directory_iterator(in_dir)) {
+    //     in_path = std::string(entry.path());
+
+    //     // Read File
+    //     if (!q.read_file(in_path)) {
+    //         // If read failed, write empty array to output file and exit
+    //         q.write_file(sorted_path);
+    //         return 0;
+    //     }
+
+    //     // Run Quick Sort
+    //     q.quick_sort();
+
+    //     // Write Sorted Array
+    //     q.write_file(sorted_path);
+
+    //     // Write and save execution time
+    //     exe_time_millis = q.write_time_to_file(time_path);
+    //     if (exe_time_millis >= 0) {
+    //         if (in_path.find("10-") != std::string::npos) {
+    //             // This input file should have 10 inputs
+    //             exe_times[0].push_back(exe_time_millis);
+    //         }
+    //         else if (in_path.find("100-") != std::string::npos) {
+    //             // This input file should have 100 inputs
+    //             exe_times[1].push_back(exe_time_millis);
+    //         }
+    //         else if (in_path.find("1000-") != std::string::npos) {
+    //             // This input file should have 1000 inputs
+    //             exe_times[2].push_back(exe_time_millis);
+    //         }
+    //     }
+    // }
+
+    // Write times and averages
     // find_average_and_save_times(exe_times);
     return 1;
-}
+} 
 
-int find_average_and_save_times(std::vector<std::vector<double>> exe_times) {
+int find_average_and_save_times(const std::vector<std::vector<double>> exe_times) {
     /**
      * Finds the average execution time for 10, 100, and 1000 input sizes
      * Writes the execution time and theaverages to a file in the given output time directory
@@ -319,7 +309,7 @@ QuickSort::QuickSort() {
     std::srand(time(0));            // Used for random pivot generation
 }
 
-int QuickSort::read_file(std::string filename){
+int QuickSort::read_file(const std::string filename){
     /**
      * Reads a file from a given filename and populates the "A" vector
      * 
