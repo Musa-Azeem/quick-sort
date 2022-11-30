@@ -188,7 +188,8 @@ int run_quick_sort_on_input_files(const std::map<std::string,int> &dirs) {
         }
 
         // Create Output Directories
-        std::string in_dir_last = in_path.substr(in_path.find_last_of("/") + 1);
+        std::string in_dir_last = in_path.substr(in_path.find_last_of("/"));
+        std::cout << in_dir_last << std::endl;
         sorted_dir = fs::path(out_dir +"/"+ in_dir_last + "-sorted");
         time_dir = fs::path(out_dir +"/"+ in_dir_last + "-execution-time");
         fs::create_directory(sorted_dir);
