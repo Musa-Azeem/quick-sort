@@ -165,7 +165,8 @@ int run_quick_sort_on_input_files(const std::map<std::string,int> &dirs) {
     std::string in_fn;
     std::string sorted_dir;
     std::string time_dir;
-    double exe_time_millis;
+    std::string sorted_path;
+    std::string time_path;
 
     // map of input size to vector execution times of each file
     std::map<int, std::vector<double>> exe_times;
@@ -188,19 +189,35 @@ int run_quick_sort_on_input_files(const std::map<std::string,int> &dirs) {
         }
 
         // Create Output Directories
-        std::string in_dir_last = in_path.substr(in_path.find_last_of("/"));
-        std::cout << in_dir_last << std::endl;
-        sorted_dir = fs::path(out_dir +"/"+ in_dir_last + "-sorted");
-        time_dir = fs::path(out_dir +"/"+ in_dir_last + "-execution-time");
-        fs::create_directory(sorted_dir);
-        fs::create_directory(time_dir);
+        std::string dir_name = in_dir.substr(in_dir.find_last_of("/"));
+        sorted_dir = fs::path(out_dir +"/"+ dir_name + "/sorted");
+        time_dir = fs::path(out_dir +"/"+ dir_name + "/execution-time");
+        // fs::create_directory(fs::path(out_dir+"/"+dir_name));
+        fs::create_directories(sorted_dir);
+        fs::create_directories(time_dir);
 
         // Read each input file in this dir and run quick sort on them
-        for (const auto & entry : fs::directory_iterator()) {
+        for (const auto & entry : fs::directory_iterator(in_dir)) {
             in_path = std::string(entry.path());    // Path to each file
             in_fn = in_path.substr(in_path.find_last_of("/") + 1);  // filename
+            sorted_path = fs::path(sorted_dir +"/"+ in_fn);
+            time_path = fs::path(time_dir +"/"+ in_fn);
 
-            std::cout << in_fn << std::endl;
+            // Read File
+            if (!q.read_file(in_path)) {
+                // If read failed, write empty array to output file and exit
+                q.write_file(sorted_path);
+                return 0;
+            }
+
+            // Run Quick Sort
+            q.quick_sort();
+
+            // Write Sorted Array
+            q.write_file(sorted_path);
+
+            // Write and save execution time
+            exe_times[input_size].push_back(q.write_time_to_file(time_path));
         }
     }
 
