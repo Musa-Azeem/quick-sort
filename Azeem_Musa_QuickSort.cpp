@@ -40,7 +40,8 @@ namespace fs = std::filesystem;
 
 std::map<std::string,int> get_dirs_from_user();
 int run_quick_sort_on_input_files(const std::map<std::string,int> &dirs);
-int find_average_and_save_times(const std::vector<std::vector<double>> exe_times);
+int find_average_and_save_times(std::string out_dir, 
+    const std::map<int, std::vector<double>> &exe_times);
 
 class QuickSort {
 
@@ -103,7 +104,7 @@ std::map<std::string,int> get_dirs_from_user() {
 
     while (!done) {
         // Get directory path
-        std::cout << "Enter the path to the directory: " << std::endl;
+        std::cout << "Enter the path to the directory:" << std::endl;
         std::cin >> path;
         if (!fs::is_directory(fs::status(path))) {
             std::cout << "Directory does not exist" << std::endl;
@@ -111,14 +112,14 @@ std::map<std::string,int> get_dirs_from_user() {
         }
 
         // Get input size
-        std::cout << "Enter the input size of the files in this directory " 
+        std::cout << "Enter the input size of the files in this directory:" 
             << std::endl;
         std::cin >> input_size;
         while(std::cin.fail())
         {
             std::cin.clear();
             std::cin.ignore();
-            std::cout << "Invalid entry. Enter an Integer: ";
+            std::cout << "Invalid entry. Enter an Integer";
             std::cin >> input_size;
         }
 
@@ -147,8 +148,8 @@ int run_quick_sort_on_input_files(const std::map<std::string,int> &dirs) {
      * Parameters:
      *      dirs (map<string, int>) :   map of directory names to the input size of
      *          the files they contain
-     *          (dir.first = path to directory)
-     *          (dir.second = input size)
+     *          (.first = path to directory)
+     *          (.second = input size)
      * 
      * Returns:
      *      int :   returns 1 to indicate success or 0 for failure
@@ -221,99 +222,75 @@ int run_quick_sort_on_input_files(const std::map<std::string,int> &dirs) {
         }
     }
 
-    // // Read each input file and run quick sort on them
-    // for (const auto & entry : fs::directory_iterator(in_dir)) {
-    //     in_path = std::string(entry.path());
-
-    //     // Read File
-    //     if (!q.read_file(in_path)) {
-    //         // If read failed, write empty array to output file and exit
-    //         q.write_file(sorted_path);
-    //         return 0;
-    //     }
-
-    //     // Run Quick Sort
-    //     q.quick_sort();
-
-    //     // Write Sorted Array
-    //     q.write_file(sorted_path);
-
-    //     // Write and save execution time
-    //     exe_time_millis = q.write_time_to_file(time_path);
-    //     if (exe_time_millis >= 0) {
-    //         if (in_path.find("10-") != std::string::npos) {
-    //             // This input file should have 10 inputs
-    //             exe_times[0].push_back(exe_time_millis);
-    //         }
-    //         else if (in_path.find("100-") != std::string::npos) {
-    //             // This input file should have 100 inputs
-    //             exe_times[1].push_back(exe_time_millis);
-    //         }
-    //         else if (in_path.find("1000-") != std::string::npos) {
-    //             // This input file should have 1000 inputs
-    //             exe_times[2].push_back(exe_time_millis);
-    //         }
-    //     }
-    // }
-
     // Write times and averages
-    // find_average_and_save_times(exe_times);
-    return 1;
+    return find_average_and_save_times(out_dir, exe_times);
 } 
 
-int find_average_and_save_times(const std::vector<std::vector<double>> exe_times) {
+int find_average_and_save_times(std::string out_dir, 
+    const std::map<int, std::vector<double>> &exe_times) {
     /**
-     * Finds the average execution time for 10, 100, and 1000 input sizes
-     * Writes the execution time and theaverages to a file in the given output time directory
+     * Finds the average execution time of all the given files for each input size
+     * Writes the execution time and the averages to output directory
      *
      * Parameters:
-     *      exe_times (vector<vector<double>>): Total number of files
-     *          and total execution times for each input size
+     *      exe_times (map<int, vector<double>>): Execution times for each input size
+     *          (.first = input size)
+     *          (.second = array of execution times)
      *
      * Returns:
-     *      (int)   :   returns 1 for success
+     *      int :   returns 1 for success
      */
 
-    std::ofstream time_out_file("Azeem_Musa_executionTime.txt");
+    std::ofstream time_out_file(fs::path(out_dir+"/Azeem_Musa_executionTime.txt"));
     if (!time_out_file) {
-        std::cerr << "Error Opening Output File" << std::endl;
+        std::cerr << "Error Opening Execution Time Output File" << std::endl;
         return 0;   // return 0 to indicate failure
     }
     time_out_file << "Input Size    Execution Time (ms)" << std::endl;
 
-    std::vector<double> averages;
+    std::map<int, double> averages;       // Average exe time for each input size
     double sum = 0;
-    int input_size = 1;
+    int input_size;
 
-    for (int i=0; i<3; i++) {
-        input_size *= 10;
-        for (auto exe_time : exe_times[i]) {
-            // Write execution times and find average for each input size
+    // Repeat for each input size
+    for (auto m : exe_times) {
+        sum = 0;
+        input_size = m.first;
+        // Write execution times and find average for each input size
+        for (auto exe_time : m.second) {
             sum += exe_time;
             time_out_file << input_size << "    " << exe_time << std::endl;
         }
 
         // Save average
-        averages.push_back(sum / exe_times[i].size());
-        sum = 0;
+        if(!averages.count(input_size)) {
+            // Create new entry if new input size
+            averages.insert(std::pair<int, double>(
+                input_size, sum/m.second.size()));
+        }
+        else {
+            // Combine average with previous entry
+            double avg = sum/m.second.size();
+            averages[input_size] = (averages[input_size] + avg) / 2;
+        }
     }
     time_out_file.close();
 
     // Write Averages to file
-    std::ofstream avg_out_file("Azeem_Musa_averageExecutionTime.txt");
+    std::ofstream avg_out_file(fs::path(out_dir+"/Azeem_Musa_averageExecutionTime.txt"));
     if (!avg_out_file) {
         std::cerr << "Error Opening Average Output File" << std::endl;
         return 0;   // return 0 to indicate failure
     }
 
     avg_out_file << "Input Size    Average Execution Time (ms)" << std::endl;
-    avg_out_file << "10    " << averages[0] << std::endl;
-    avg_out_file << "100    " << averages[1] << std::endl;
-    avg_out_file << "1000    " << averages[2] << std::endl;
-
+    for (auto m : averages) {
+        avg_out_file << m.first << "    " << m.second << std::endl;
+    }
     avg_out_file.close();
     return 1;
 }
+
 
 // QuickSort Functions
 
