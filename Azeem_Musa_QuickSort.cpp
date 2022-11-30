@@ -168,10 +168,6 @@ std::map<std::string,int> get_dirs_from_user() {
         }
     }
 
-    for(auto k:dirs) {
-        std::cout << k.first << " " << k.second << std::endl;
-    }
-
     return dirs;
 }
 
