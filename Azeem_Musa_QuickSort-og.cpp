@@ -33,12 +33,9 @@
 #include <cstdlib>
 #include <cmath>
 #include <chrono>
-#include <map>
 
 namespace fs = std::filesystem;
 
-
-std::map<std::string,int> get_dirs_from_user();
 std::tuple<std::string, std::string> get_out_paths(std::string in_path, 
                                                    std::string out_dir,  
                                                    std::string time_dir);
@@ -73,75 +70,20 @@ class QuickSort {
 int main(int argc, char **argv) {
     
     // Ensure the right number of command line arguments were given
-    if (argc != 1){
-        std::cout << "Usage: ./quicksort" << std::endl;
+    if (argc != 2){
+        std::cout << "Usage: ./quicksort [Input Files Directory]" << std::endl;
         return 1;
     }
 
-    std::map<std::string, int> dirs = get_dirs_from_user();
-
     // Get string directory names
-    // std::string input_dir = argv[1];
+    std::string input_dir = argv[1];
 
-    // // Run quick sort on each of the 75 input files
-    // if (!run_quick_sort_on_input_files(input_dir)) {
-    //     return 1;
-    // }
-
-    return 0;
-}
-
-std::map<std::string,int> get_dirs_from_user() {
-    /**
-     * Gets the path to directories with input files from users
-     * User provides the number of input numbers in the files of this directory
-     * Iterates until user quits
-     * 
-     * Returns:
-     *  map<int,int>    :   map of filepath to the input size of its files
-     */
-
-    std::map<std::string, int> dirs;
-    bool done = false;
-    std::string path;
-    std::string response;
-    int input_size;
-
-    std::cout << "Enter directories containing input files with the same number"
-        <<" of values per file" << std::endl;
-
-    while (!done) {
-        // Get directory path
-        std::cout << "Enter the path to the directory: " << std::endl;
-        std::cin >> path;
-        if (!fs::is_directory(fs::status(path))) {
-            std::cout << "Directory does not exist" << std::endl;
-            continue;
-        }
-
-        // Get input size
-        std::cout << "Enter the input size of the files in this directory " 
-            << std::endl;
-        std::cin >> input_size;
-        while(std::cin.fail())
-        {
-            std::cin.clear();
-            std::cin.ignore();
-            std::cout << "Invalid entry. Enter an Integer: ";
-            std::cin >> input_size;
-        }
-
-        // Create new entry in map
-        dirs.insert(std::pair<std::string, int>(path, input_size));
-
-        std::cout << "Done? (y/n)" << std::endl;
-        std::cin >> response;
-        if (response == "y") {
-            done = true;
-        }
+    // Run quick sort on each of the 75 input files
+    if (!run_quick_sort_on_input_files(input_dir)) {
+        return 1;
     }
 
-    return dirs;
+    return 0;
 }
 
 std::tuple<std::string, std::string> get_out_paths(std::string in_path, 
