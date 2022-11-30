@@ -75,8 +75,6 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    fs::create_directory("./hello");
-
     // Get string directory names
     std::string input_dir = argv[1];
 

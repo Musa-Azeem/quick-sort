@@ -26,6 +26,8 @@
 #include <random>
 #include <climits>
 
+namespace fs = std::filesystem;
+
 int generate_files(std::string dir);
 int generate_files(int num_of_files, int num_of_values, std::string dir);
 
@@ -37,8 +39,8 @@ int main(int argc, char **argv) {
 
     std::string dir = argv[1];
     if (!generate_files(dir)) {
-        std::cout << "Failed to write files " <<
-            "- output directory does not exist" << std::endl;
+        // Create directory if doesn't exist
+        std::cout << "Failed to write files" << std::endl;
     }
 }
 
@@ -51,6 +53,12 @@ int generate_files(std::string dir) {
      *  - 25 with 100 values
      *  - 25 with 1000 values
      */
+
+    // Create Directories
+    fs::create_directory(dir);
+    fs::create_directory(fs::path(dir+"/10"));
+    fs::create_directory(fs::path(dir+"/100"));
+    fs::create_directory(fs::path(dir+"/1000"));
 
     if (!generate_files(25, 10, dir) ||
         !generate_files(25, 100, dir) ||
@@ -77,7 +85,7 @@ int generate_files(int num_of_files, int num_of_values, std::string dir) {
     for (int i=0; i<num_of_files; i++) {
 
         std::filesystem::path p(dir + "/" + std::to_string(num_of_values)
-            + "-" + std::to_string(i) + ".txt");
+            + "/" + std::to_string(i) + ".txt");
 
         std::ofstream out_file(p);
         if (out_file) {
