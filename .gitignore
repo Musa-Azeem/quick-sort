@@ -36,5 +36,8 @@ exe_times
 __time_quick_sort_files__
 InputFileGenerator
 Azeem_Musa_QuickSort
+Azeem_Musa_executionTime.txt
+Azeem_Musa_averageExecutionTime.txt
+Azeem_Musa_plotAverageExecutionTime.jpg
 CSCE350Project_Azeem_Musa.zip
 out
