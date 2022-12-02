@@ -85,7 +85,7 @@ int generate_files(int num_of_files, int num_of_values, std::string dir) {
     for (int i=0; i<num_of_files; i++) {
 
         std::filesystem::path p(dir + "/" + std::to_string(num_of_values)
-            + "/" + std::to_string(i) + ".txt");
+            + "/input-file" + std::to_string(i+1) + ".txt");
 
         std::ofstream out_file(p);
         if (out_file) {
