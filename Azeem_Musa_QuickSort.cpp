@@ -33,9 +33,9 @@
  *      ├── Azeem_Musa_executionTime.txt
  *      ├── X
  *      │   ├── execution-time
- *      │       ├── 0.txt
- *      │       ├── ...
- *      │       └── n.txt
+ *      │   │   ├── 0.txt
+ *      │   │   ├── ...
+ *      │   │   └── n.txt
  *      │   └── sorted
  *      │       ├── 0.txt
  *      │       ├── ...
@@ -96,7 +96,6 @@ class QuickSort {
         int read_file(const std::string filename);
         int quick_sort();
         int write_file(const std::string filename) const;
-        // double write_time_to_file(const std::string filename) const;
         double get_exe_time() const;
         void print_array() const;
 };
@@ -196,16 +195,13 @@ int run_quick_sort_on_input_files(const std::map<std::string,int> &dirs) {
 	std::time(&time);
 	tm * curr_tm = localtime(&time);
 	char _out_dir[100];
-    std::strftime(_out_dir, 50, "output_%y-%m-%d_%H.%M.%S", curr_tm);
+    std::strftime(_out_dir, 50, "output_%y-%m-%d_%H_%M_%S", curr_tm);
     std::string out_dir(_out_dir);
-    // fs::create_directory(out_dir);
 
     std::string in_path;
     std::string in_fn;
     std::string sorted_dir;
-    // std::string time_dir;
     std::string sorted_path;
-    // std::string time_path;
 
     // map of input size to vector execution times of each file
     std::map<int, std::vector<double>> exe_times;
@@ -231,17 +227,13 @@ int run_quick_sort_on_input_files(const std::map<std::string,int> &dirs) {
         // Create Output Directory
         std::string dir_name = in_dir.substr(in_dir.find_last_of("/"));
         sorted_dir = fs::path(out_dir +"/"+ dir_name + "-sorted");
-        // time_dir = fs::path(out_dir +"/"+ dir_name + "/execution-time");
-        // fs::create_directory(fs::path(out_dir+"/"+dir_name));
         fs::create_directories(sorted_dir);
-        // fs::create_directories(time_dir);
 
         // Read each input file in this dir and run quick sort on them
         for (const auto & entry : fs::directory_iterator(in_dir)) {
             in_path = std::string(entry.path());    // Path to each file
             in_fn = in_path.substr(in_path.find_last_of("/") + 1);  // filename
             sorted_path = fs::path(sorted_dir +"/"+ in_fn);
-            // time_path = fs::path(time_dir +"/"+ in_fn);
 
             // Read File
             if (!q.read_file(in_path)) {
@@ -254,7 +246,7 @@ int run_quick_sort_on_input_files(const std::map<std::string,int> &dirs) {
             q.quick_sort();
 
             // Get execution time
-            exe_times[input_size].push_back(q.get_exe_time()));
+            exe_times[input_size].push_back(q.get_exe_time());
 
             // Write Sorted Array
             q.write_file(sorted_path);
