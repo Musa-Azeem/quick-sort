@@ -14,8 +14,9 @@
  * Output Format:
  *  - Output files are ASCII and contain random floating-point numbers
  *    seperated by whitespace
- *  - Output files are saved in the given directory 
- *  - Filenames are in format, 10-0, 10-1, ... ,100-0, 100-1, ... 1000-23, 1000-24
+ *  - Output files are saved within the given directory, in subdirectories 
+ *      10, 100, and 1000 for each input size:
+ *  - Filenames are in format, input-file-1, ... , input-file-25
  */
 
 #include <iostream>
@@ -85,7 +86,7 @@ int generate_files(int num_of_files, int num_of_values, std::string dir) {
     for (int i=0; i<num_of_files; i++) {
 
         std::filesystem::path p(dir + "/" + std::to_string(num_of_values)
-            + "/input-file" + std::to_string(i+1) + ".txt");
+            + "/input-file-" + std::to_string(i+1) + ".txt");
 
         std::ofstream out_file(p);
         if (out_file) {
