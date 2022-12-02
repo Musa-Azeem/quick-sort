@@ -25,7 +25,6 @@
 #include <cstdlib>
 #include <filesystem>
 #include <random>
-#include <climits>
 
 namespace fs = std::filesystem;
 
@@ -92,9 +91,9 @@ int generate_files(int num_of_files, int num_of_values, std::string dir) {
         if (out_file) {
             // Write <num_of_values> random double values
             for (int j=0; j<num_of_values; j++) {
-                std::random_device rand_dev;            
-                std::mt19937 generator(rand_dev());     // RNG
-                std::uniform_int_distribution<int> distr(-100000, 100000);
+                std::random_device rd;            
+                std::mt19937 generator(rd());     // RNG
+                std::uniform_real_distribution<float> distr(-100000, 100000);
                 out_file << distr(generator) << " ";
             }
         }

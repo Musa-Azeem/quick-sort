@@ -96,7 +96,8 @@ class QuickSort {
         int read_file(const std::string filename);
         int quick_sort();
         int write_file(const std::string filename) const;
-        double write_time_to_file(const std::string filename) const;
+        // double write_time_to_file(const std::string filename) const;
+        double get_exe_time() const;
         void print_array() const;
 };
 
@@ -197,14 +198,14 @@ int run_quick_sort_on_input_files(const std::map<std::string,int> &dirs) {
 	char _out_dir[100];
     std::strftime(_out_dir, 50, "output_%y-%m-%d_%H.%M.%S", curr_tm);
     std::string out_dir(_out_dir);
-    fs::create_directory(out_dir);
+    // fs::create_directory(out_dir);
 
     std::string in_path;
     std::string in_fn;
     std::string sorted_dir;
-    std::string time_dir;
+    // std::string time_dir;
     std::string sorted_path;
-    std::string time_path;
+    // std::string time_path;
 
     // map of input size to vector execution times of each file
     std::map<int, std::vector<double>> exe_times;
@@ -222,24 +223,25 @@ int run_quick_sort_on_input_files(const std::map<std::string,int> &dirs) {
         }
 
         if(!exe_times.count(input_size)) {
+            // If this input size is new, create new entry
             exe_times.insert(std::pair<int, std::vector<double>>(
                 input_size, std::vector<double>()));
         }
 
-        // Create Output Directories
+        // Create Output Directory
         std::string dir_name = in_dir.substr(in_dir.find_last_of("/"));
-        sorted_dir = fs::path(out_dir +"/"+ dir_name + "/sorted");
-        time_dir = fs::path(out_dir +"/"+ dir_name + "/execution-time");
+        sorted_dir = fs::path(out_dir +"/"+ dir_name + "-sorted");
+        // time_dir = fs::path(out_dir +"/"+ dir_name + "/execution-time");
         // fs::create_directory(fs::path(out_dir+"/"+dir_name));
         fs::create_directories(sorted_dir);
-        fs::create_directories(time_dir);
+        // fs::create_directories(time_dir);
 
         // Read each input file in this dir and run quick sort on them
         for (const auto & entry : fs::directory_iterator(in_dir)) {
             in_path = std::string(entry.path());    // Path to each file
             in_fn = in_path.substr(in_path.find_last_of("/") + 1);  // filename
             sorted_path = fs::path(sorted_dir +"/"+ in_fn);
-            time_path = fs::path(time_dir +"/"+ in_fn);
+            // time_path = fs::path(time_dir +"/"+ in_fn);
 
             // Read File
             if (!q.read_file(in_path)) {
@@ -251,11 +253,11 @@ int run_quick_sort_on_input_files(const std::map<std::string,int> &dirs) {
             // Run Quick Sort
             q.quick_sort();
 
+            // Get execution time
+            exe_times[input_size].push_back(q.get_exe_time()));
+
             // Write Sorted Array
             q.write_file(sorted_path);
-
-            // Write and save execution time
-            exe_times[input_size].push_back(q.write_time_to_file(time_path));
         }
     }
 
@@ -327,6 +329,8 @@ int find_average_and_save_times(const std::string out_dir,
     avg_out_file.close();
     return 1;
 }
+
+
 
 
 // QuickSort Functions
@@ -552,35 +556,16 @@ int QuickSort::write_file(const std::string filename) const {
     return 1;
 }
 
-double QuickSort::write_time_to_file(const std::string filename) const{
+double QuickSort::get_exe_time() const{
     /**
-     * This function writes the execution time in milliseconds of the most 
-     *   recent quick sort algorithm that was run to a file of a given name
-     * Output file
-     *  - Writes floating point time delta
+     * This function calculates and returns the execution time in milliseconds
+     *      of the most recent quick sort algorithm that was run
      * 
-     * Parameters:
-     *      filename (string)   :   Name of file to write to
-     *
      * Returns:
      *      (double)    :   execution time in milliseconds
      */
 
-    // Calculate execution time of most recent quick_sort
-    double delta_millis = (end_time - start_time).count()/1000.0;
-
-    std::ofstream out_file(filename);
-
-    if (!out_file) {
-        std::cerr << "Error Opening Output File" << std::endl;
-        return -1;   // return -1 to indicate failure
-    }
-
-    // Write to file
-    out_file << delta_millis;
-    out_file.close();
-
-    return delta_millis;
+    return (end_time - start_time).count()/1000.0;
 }
 
 void QuickSort::print_array() const {
